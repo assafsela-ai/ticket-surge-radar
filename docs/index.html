@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Spot unusual spikes in support tickets and investigate the evidence in your browser.">
+  <meta name="theme-color" content="#f4f4eb">
+  <title>Ticket Surge Radar</title>
+  <link rel="icon" href="./favicon.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <div class="shell top-inner">
+      <a class="wordmark" href="./"><span class="brand-mark" aria-hidden="true"></span> Ticket Surge Radar</a>
+      <nav aria-label="Project">
+        <a href="https://github.com/assafsela-ai/ticket-surge-radar">Source</a>
+        <a href="./ticket-surge-radar-skill.zip" download>Agent skill</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <p class="kicker"><span aria-hidden="true"></span> CUSTOMER OPERATIONS</p>
+        <h1 id="page-title">Ticket Surge <br>Radar<span>.</span></h1>
+        <p class="lead">Spot the issue behind a spike in support tickets.</p>
+        <div class="actions">
+          <button class="primary" id="replay" type="button"><span class="play" aria-hidden="true"></span><span id="replay-label">Run demo</span></button>
+          <div class="upload-control">
+            <input class="file-input" type="file" id="upload" accept=".csv,.tsv,text/csv,text/tab-separated-values" aria-describedby="file-help">
+            <label class="upload-button" for="upload"><span class="upload-icon" aria-hidden="true">↑</span> Upload CSV</label>
+          </div>
+        </div>
+        <p class="file-help" id="file-help">Files stay in this browser. <a href="./sample-tickets.csv" download>Download sample CSV</a></p>
+        <p id="file-error" class="file-error" role="alert" hidden></p>
+      </div>
+      <div class="radar-graphic" id="radar-graphic" aria-hidden="true">
+        <div class="radar-screen">
+          <div class="rings"></div>
+          <div class="sweep"></div>
+          <i class="blip blip-main"></i><i class="blip blip-small"></i><i class="blip blip-faint"></i>
+        </div>
+      </div>
+    </section>
+    <section class="workspace" aria-labelledby="workspace-title">
+      <div class="workspace-head">
+        <div class="workspace-title">
+          <h2 id="workspace-title">Signal overview</h2>
+          <span class="source" id="source">Synthetic demo</span>
+        </div>
+        <label class="window" for="window">Window
+          <select id="window">
+            <option value="3">3 hours</option>
+            <option value="6" selected>6 hours</option>
+            <option value="12">12 hours</option>
+            <option value="24">24 hours</option>
+          </select>
+        </label>
+      </div>
+      <p class="sr" id="announce" role="status"></p>
+      <div class="stats">
+        <div><span>Tickets in dataset</span><strong id="total">—</strong><small id="coverage">English topic model</small></div>
+        <div><span>Tickets in latest window</span><strong id="recent">—</strong><small id="window-date"></small></div>
+        <div><span>Surges detected</span><strong id="alerts">—</strong><small id="baseline-label"></small></div>
+      </div>
+      <div class="board">
+        <figure class="chart" aria-labelledby="chart-title">
+          <div class="chart-head"><h3 id="chart-title">Ticket volume</h3><span class="chart-unit">Tickets per hour · UTC</span></div>
+          <div class="legend"><span><i></i> All tickets</span><span><i></i> <span id="chart-topic">Selected topic</span></span></div>
+          <canvas id="chart" aria-hidden="true"></canvas>
+          <figcaption id="chart-caption"></figcaption>
+          <details class="chart-details"><summary>Hourly counts</summary><div id="hourly"></div></details>
+        </figure>
+        <section class="topics" aria-labelledby="topics-title">
+          <h3 id="topics-title">Detected topics</h3>
+          <p class="topic-intro">Select a topic to see its evidence.</p>
+          <div class="topics-label" aria-hidden="true"><span>Topic</span><span>Latest</span><span>Lift</span></div>
+          <div id="topics"></div>
+          <a class="evidence-jump" href="#investigation-title">View ticket evidence</a>
+        </section>
+      </div>
+    </section>
+    <section class="investigation" aria-labelledby="investigation-title">
+      <div class="investigation-head">
+        <div><p class="kicker">INVESTIGATE A TOPIC</p><h2 id="investigation-title">Ticket evidence</h2></div>
+        <span id="investigation-state" class="status-chip"></span>
+      </div>
+      <p id="comparison" class="comparison"></p>
+      <div class="investigation-grid">
+        <div>
+          <h3>Source tickets</h3>
+          <ol id="evidence" class="evidence"></ol>
+          <p id="evidence-empty" class="secondary" hidden>No tickets for this topic in the latest window.</p>
+          <button class="subtle" id="more" type="button" hidden></button>
+        </div>
+        <div class="brief">
+          <div class="brief-head"><h3>Draft incident brief</h3><button class="subtle" id="copy" type="button" hidden>Copy brief</button></div>
+          <p id="brief-empty" class="secondary">A draft appears when the selected topic crosses the surge threshold.</p>
+          <pre id="brief-text" hidden></pre>
+          <p id="copy-status" role="status"></p>
+        </div>
+      </div>
+    </section>
+    <footer>
+      <details>
+        <summary>How Radar detects a surge</summary>
+        <p>A small English-language model groups tickets into six support topics. Low-confidence matches appear as Unclassified. Radar compares the latest window with up to four earlier windows of equal length. A surge needs at least two prior windows, at least four current tickets, at least three above baseline, and at least twice the baseline. A zero baseline can also trigger a new signal.</p>
+        <p>For CSV imports, include <code>created_at</code> and <code>subject</code> or <code>body</code>. The optional <code>ticket_id</code> identifies evidence. Use ISO dates and UTF-8. Limit 10 MB and 10,000 rows.</p>
+      </details>
+      <p>Built by <a href="https://assafsela-ai.github.io/Assaf-Sela/">Assaf Sela</a></p>
+    </footer>
+    <noscript>This demo requires JavaScript to analyze tickets in your browser.</noscript>
+  </main>
+</body>
+</html>
